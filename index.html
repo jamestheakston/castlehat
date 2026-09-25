@@ -87,8 +87,10 @@
     <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
         <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-2.5">
-                <div class="w-6 h-6 rounded-md bg-zinc-900 flex items-center justify-center text-white font-bold shadow-sm">
-                    <i data-lucide="shield" class="w-3.5 h-3.5 text-accent-400"></i>
+                <div class="w-6 h-6 flex items-center justify-center">
+                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <path fill="#000000" d="M254.25 15.344c-132.537 0-240.188 107.62-240.188 240.156 0 132.537 107.65 240.188 240.188 240.188 132.537 0 240.156-107.65 240.156-240.188 0-132.537-107.62-240.156-240.156-240.156zm0 18.687c122.436 0 221.47 99.034 221.47 221.47 0 65.65-28.465 124.583-73.75 165.125V238.75l14-22.78h-7.595L364 101.5l-43.813 114.47h-8.156l14.595 22.78v33.875h-36.813v-88.188l14.625-22.78h-7.593l-44.406-114.47-44.375 114.47h-7.594l14.03 22.78v123.22h-37.375v-18.094l14.594-22.782h-8.19l-43.78-114.467L95.344 266.78H87.75l14.03 22.783V416.25C59.25 375.9 32.75 318.83 32.75 255.5c0-122.436 99.064-221.47 221.5-221.47zm1.094 160.532h18.687v36.344h-18.686v-36.344zm110.156 87.97h18.688v36.312H365.5V282.53zm-246.656 22.03h18.687v36.344h-18.686v-36.344zm50.875 29.407h18.686v36.342H169.72V333.97zm170.81 30.5h18.69v36.342h-18.69V364.47z"></path>
+                    </svg>
                 </div>
                 <span class="font-medium tracking-tight text-zinc-900 text-sm">Castlehat</span>
             </div>
@@ -204,8 +206,10 @@
     <footer class="border-t border-zinc-100 py-6 px-6 text-center text-xs text-zinc-500">
         <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
             <div class="flex items-center space-x-2">
-                <div class="w-4 h-4 rounded bg-zinc-900 flex items-center justify-center text-white font-bold text-[9px]">
-                    <i data-lucide="shield" class="w-2.5 h-2.5 text-accent-400"></i>
+                <div class="w-4 h-4 flex items-center justify-center">
+                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <path fill="#000000" d="M254.25 15.344c-132.537 0-240.188 107.62-240.188 240.156 0 132.537 107.65 240.188 240.188 240.188 132.537 0 240.156-107.65 240.156-240.188 0-132.537-107.62-240.156-240.156-240.156zm0 18.687c122.436 0 221.47 99.034 221.47 221.47 0 65.65-28.465 124.583-73.75 165.125V238.75l14-22.78h-7.595L364 101.5l-43.813 114.47h-8.156l14.595 22.78v33.875h-36.813v-88.188l14.625-22.78h-7.593l-44.406-114.47-44.375 114.47h-7.594l14.03 22.78v123.22h-37.375v-18.094l14.594-22.782h-8.19l-43.78-114.467L95.344 266.78H87.75l14.03 22.783V416.25C59.25 375.9 32.75 318.83 32.75 255.5c0-122.436 99.064-221.47 221.5-221.47zm1.094 160.532h18.687v36.344h-18.686v-36.344zm110.156 87.97h18.688v36.312H365.5V282.53zm-246.656 22.03h18.687v36.344h-18.686v-36.344zm50.875 29.407h18.686v36.342H169.72V333.97zm170.81 30.5h18.69v36.342h-18.69V364.47z"></path>
+                    </svg>
                 </div>
                 <span class="font-medium text-zinc-700">Castlehat</span>
             </div>
@@ -222,10 +226,15 @@
             <button onclick="closeModal()" class="absolute top-3 right-3 text-zinc-400 hover:text-zinc-600">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
-            <div class="mb-4">
-                <h3 id="modal-title" class="text-sm font-semibold text-zinc-900 mb-1">Get Started</h3>
-                <p class="text-xs text-zinc-500">Enter your email to request sandbox testing cluster access.</p>
+            <div class="mb-4 flex items-center space-x-3">
+                <div class="w-8 h-8 flex items-center justify-center">
+                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <path fill="#000000" d="M254.25 15.344c-132.537 0-240.188 107.62-240.188 240.156 0 132.537 107.65 240.188 240.188 240.188 132.537 0 240.156-107.65 240.156-240.188 0-132.537-107.62-240.156-240.156-240.156zm0 18.687c122.436 0 221.47 99.034 221.47 221.47 0 65.65-28.465 124.583-73.75 165.125V238.75l14-22.78h-7.595L364 101.5l-43.813 114.47h-8.156l14.595 22.78v33.875h-36.813v-88.188l14.625-22.78h-7.593l-44.406-114.47-44.375 114.47h-7.594l14.03 22.78v123.22h-37.375v-18.094l14.594-22.782h-8.19l-43.78-114.467L95.344 266.78H87.75l14.03 22.783V416.25C59.25 375.9 32.75 318.83 32.75 255.5c0-122.436 99.064-221.47 221.5-221.47zm1.094 160.532h18.687v36.344h-18.686v-36.344zm110.156 87.97h18.688v36.312H365.5V282.53zm-246.656 22.03h18.687v36.344h-18.686v-36.344zm50.875 29.407h18.686v36.342H169.72V333.97zm170.81 30.5h18.69v36.342h-18.69V364.47z"></path>
+                    </svg>
+                </div>
+                <h3 id="modal-title" class="text-sm font-semibold text-zinc-900">Get Started</h3>
             </div>
+            <p class="text-xs text-zinc-500 mb-4">Enter your email to request sandbox testing cluster access.</p>
             <form onsubmit="handleFormSubmit(event)" class="space-y-3">
                 <input type="email" required placeholder="analyst@domain.com" class="w-full bg-zinc-50 border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors">
                 <button type="submit" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">Continue</button>
