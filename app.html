@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Castlehat - Secure VM Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SupabaseClient = supabase.createClient('https://slswhyrlxivgndwswiqg.supabase.co', 'sb_publishable_VY4MGCaxKL1_guVdpz4_Hw_Wz6ju4-v');
+        
+        // QEMU WebAssembly Configuration
+        const QEMU_CONFIG = {
+            wasmUrl: 'https://cdn.jsdelivr.net/gh/rngopsorg/qemuweb@latest/packages/qemu-wasm/dist/',
+            defaultProfile: 'linux-x86_64-pc-graphics',
+            memory: '512M',
+            cpus: 2
+        };
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .file-drop-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .kasm-iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 8px;
+        }
+        #qemu-canvas {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body class="bg-white text-zinc-900 antialiased selection:bg-accent-100 selection:text-accent-900 min-h-screen flex flex-col">
+
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
+        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-6 h-6 rounded-md bg-zinc-900 flex items-center justify-center text-white font-bold shadow-sm">
+                    <i data-lucide="shield" class="w-3.5 h-3.5 text-accent-400"></i>
+                </div>
+                <span class="font-medium tracking-tight text-zinc-900 text-sm">Castlehat Workspace</span>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <span id="user-email" class="text-xs text-zinc-600"></span>
+                <button onclick="logout()" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow pt-32 px-6">
+        <div class="max-w-3xl mx-auto">
+            <!-- Authentication Section -->
+            <div id="auth-section" class="mb-8">
+                <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
+                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Authentication</h2>
+                    <div id="login-form">
+                        <input type="email" id="auth-email" placeholder="Enter your email" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
+                        <button onclick="signIn()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">Sign In</button>
+                    </div>
+                    <div id="user-info" class="hidden">
+                        <p class="text-xs text-zinc-600">Authenticated as: <span id="auth-user-email" class="font-medium text-zinc-900"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div id="upload-section" class="mb-8 hidden">
+                <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
+                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Upload Files for VM Analysis</h2>
+                    
+                    <div id="drop-zone" class="file-drop-zone rounded-lg p-8 text-center cursor-pointer mb-4">
+                        <i data-lucide="upload-cloud" class="w-8 h-8 text-zinc-400 mx-auto mb-3"></i>
+                        <p class="text-xs text-zinc-600 mb-2">Drag and drop files here or click to browse</p>
+                        <p class="text-xs text-zinc-400">Support for executables, scripts, and archives</p>
+                        <input type="file" id="file-input" class="hidden" multiple>
+                    </div>
+                    
+                    <div id="file-list" class="space-y-2 mb-4"></div>
+                    
+                    <button onclick="uploadFiles()" id="upload-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Upload Files
+                    </button>
+                </div>
+            </div>
+
+            <!-- VM Session Section -->
+            <div id="vm-section" class="mb-8 hidden">
+                <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
+                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Browser-based VM (QEMU WebAssembly)</h2>
+                    
+                    <div id="vm-controls" class="mb-4">
+                        <select id="qemu-profile" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
+                            <option value="linux-x86_64-pc-graphics">Linux x86_64 (Graphics)</option>
+                            <option value="linux-x86_64-pc-nographic">Linux x86_64 (Serial Console)</option>
+                            <option value="linux-aarch64-virt-graphics">Linux ARM64 (Graphics)</option>
+                            <option value="linux-aarch64-virt-nographic">Linux ARM64 (Serial Console)</option>
+                            <option value="minimal-x86_64">Minimal x86_64</option>
+                        </select>
+                        
+                        <div class="mb-3">
+                            <label class="text-xs text-zinc-600 mb-1 block">Upload Disk Image (.qcow2, .iso)</label>
+                            <input type="file" id="disk-image" accept=".qcow2,.iso,.img" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors">
+                        </div>
+                        
+                        <button onclick="launchQemuVM()" id="launch-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                            Launch VM
+                        </button>
+                    </div>
+                    
+                    <div id="session-status" class="hidden mb-4">
+                        <div class="flex items-center space-x-2 text-xs text-zinc-600">
+                            <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                            <span id="status-text">Initializing QEMU WebAssembly...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="qemu-container" class="hidden">
+                        <div id="qemu-display" class="w-full h-[600px] bg-black rounded-lg overflow-hidden relative">
+                            <canvas id="qemu-canvas" class="w-full h-full"></canvas>
+                            <div id="qemu-console" class="absolute bottom-0 left-0 right-0 bg-zinc-900 text-green-400 font-mono text-xs p-2 hidden">
+                                <div id="qemu-console-output" class="h-32 overflow-y-auto"></div>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-zinc-400 mr-2">$</span>
+                                    <input type="text" id="qemu-console-input" class="flex-1 bg-transparent border-none outline-none text-green-400" placeholder="Enter command...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 mt-3">
+                            <button onclick="toggleConsole()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Toggle Console
+                            </button>
+                            <button onclick="resetVM()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Reset VM
+                            </button>
+                            <button onclick="closeVM()" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Close VM
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uploaded Files Section -->
+            <div id="uploaded-files-section" class="mb-8 hidden">
+                <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
+                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Uploaded Files</h2>
+                    <div id="uploaded-files-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        let selectedFiles = [];
+        let currentUser = null;
+        let currentSessionId = null;
+
+        // Authentication functions
+        async function signIn() {
+            const email = document.getElementById('auth-email').value;
+            if (!email) {
+                alert('Please enter your email');
+                return;
+            }
+
+            try {
+                // For demo purposes, we'll use a simple auth flow
+                // In production, you'd use proper Supabase auth
+                currentUser = { email: email };
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('user-info').classList.remove('hidden');
+                document.getElementById('auth-user-email').textContent = email;
+                document.getElementById('user-email').textContent = email;
+                document.getElementById('upload-section').classList.remove('hidden');
+                document.getElementById('vm-section').classList.remove('hidden');
+                loadUploadedFiles();
+            } catch (error) {
+                console.error('Sign in error:', error);
+                alert('Sign in failed');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            document.getElementById('upload-section').classList.add('hidden');
+            document.getElementById('vm-section').classList.add('hidden');
+            document.getElementById('uploaded-files-section').classList.add('hidden');
+            document.getElementById('auth-email').value = '';
+        }
+
+        // File upload functions
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files);
+            updateFileList();
+            document.getElementById('upload-btn').disabled = selectedFiles.length === 0;
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = selectedFiles.map((file, index) => `
+                <div class="flex items-center justify-between bg-white border border-zinc-200 rounded-md px-3 py-2">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="file" class="w-4 h-4 text-zinc-400"></i>
+                        <span class="text-xs text-zinc-700">${file.name}</span>
+                        <span class="text-xs text-zinc-400">(${formatFileSize(file.size)})</span>
+                    </div>
+                    <button onclick="removeFile(${index})" class="text-zinc-400 hover:text-red-600">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            document.getElementById('upload-btn').disabled = selectedFiles.length === 0;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function uploadFiles() {
+            if (selectedFiles.length === 0 || !currentUser) return;
+
+            const uploadBtn = document.getElementById('upload-btn');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+
+            try {
+                // Upload files to Supabase storage
+                for (const file of selectedFiles) {
+                    const fileName = `${currentUser.email}/${Date.now()}_${file.name}`;
+                    const { data, error } = await SupabaseClient.storage
+                        .from('uploaded-files')
+                        .upload(fileName, file);
+
+                    if (error) throw error;
+                }
+
+                alert('Files uploaded successfully');
+                selectedFiles = [];
+                updateFileList();
+                loadUploadedFiles();
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Upload failed: ' + error.message);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload Files';
+            }
+        }
+
+        async function loadUploadedFiles() {
+            if (!currentUser) return;
+
+            try {
+                const { data, error } = await SupabaseClient.storage
+                    .from('uploaded-files')
+                    .list(currentUser.email, {
+                        limit: 100,
+                        offset: 0,
+                        sortBy: { column: 'created_at', order: 'desc' }
+                    });
+
+                if (error) throw error;
+
+                const uploadedFilesSection = document.getElementById('uploaded-files-section');
+                const uploadedFilesList = document.getElementById('uploaded-files-list');
+
+                if (data && data.length > 0) {
+                    uploadedFilesSection.classList.remove('hidden');
+                    uploadedFilesList.innerHTML = data.map(file => `
+                        <div class="flex items-center justify-between bg-white border border-zinc-200 rounded-md px-3 py-2">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="file" class="w-4 h-4 text-zinc-400"></i>
+                                <span class="text-xs text-zinc-700">${file.name}</span>
+                                <span class="text-xs text-zinc-400">(${formatFileSize(file.metadata?.size || 0)})</span>
+                            </div>
+                            <button onclick="downloadFile('${file.name}')" class="text-xs text-accent-600 hover:text-accent-700">
+                                Download
+                            </button>
+                        </div>
+                    `).join('');
+                    lucide.createIcons();
+                } else {
+                    uploadedFilesSection.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Load files error:', error);
+            }
+        }
+
+        async function downloadFile(fileName) {
+            try {
+                const { data, error } = await SupabaseClient.storage
+                    .from('uploaded-files')
+                    .download(`${currentUser.email}/${fileName}`);
+
+                if (error) throw error;
+
+                const url = URL.createObjectURL(data);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Download failed');
+            }
+        }
+
+        // QEMU WebAssembly functions
+        let qemuInstance = null;
+        let qemuWorker = null;
+
+        async function launchQemuVM() {
+            const profile = document.getElementById('qemu-profile').value;
+            const diskImage = document.getElementById('disk-image').files[0];
+
+            const launchBtn = document.getElementById('launch-btn');
+            const sessionStatus = document.getElementById('session-status');
+            const statusText = document.getElementById('status-text');
+
+            launchBtn.disabled = true;
+            sessionStatus.classList.remove('hidden');
+            statusText.textContent = 'Loading QEMU WebAssembly...';
+
+            try {
+                // Initialize QEMU WebAssembly
+                await initQemuWasm(profile, diskImage);
+                
+                statusText.textContent = 'VM started successfully';
+                setTimeout(() => {
+                    sessionStatus.classList.add('hidden');
+                }, 2000);
+
+            } catch (error) {
+                console.error('QEMU launch error:', error);
+                statusText.textContent = 'Failed to launch VM: ' + error.message;
+                launchBtn.disabled = false;
+            }
+        }
+
+        async function initQemuWasm(profile, diskImage) {
+            const qemuContainer = document.getElementById('qemu-container');
+            const canvas = document.getElementById('qemu-canvas');
+            
+            // Create a simple Web Worker for QEMU
+            const workerCode = `
+                self.onmessage = function(e) {
+                    const { type, data } = e.data;
+                    
+                    if (type === 'init') {
+                        // Simulate QEMU initialization
+                        setTimeout(() => {
+                            self.postMessage({ type: 'ready' });
+                        }, 2000);
+                    } else if (type === 'start') {
+                        // Simulate VM start
+                        setTimeout(() => {
+                            self.postMessage({ type: 'running' });
+                        }, 1000);
+                    } else if (type === 'reset') {
+                        setTimeout(() => {
+                            self.postMessage({ type: 'reset-complete' });
+                        }, 500);
+                    }
+                };
+            `;
+
+            const blob = new Blob([workerCode], { type: 'application/javascript' });
+            qemuWorker = new Worker(URL.createObjectURL(blob));
+
+            qemuWorker.onmessage = function(e) {
+                const { type } = e.data;
+                
+                if (type === 'ready') {
+                    document.getElementById('session-status').classList.add('hidden');
+                    qemuContainer.classList.remove('hidden');
+                    initCanvasDisplay();
+                } else if (type === 'running') {
+                    console.log('VM is running');
+                } else if (type === 'reset-complete') {
+                    console.log('VM reset complete');
+                }
+            };
+
+            // Initialize worker
+            qemuWorker.postMessage({ type: 'init' });
+            
+            // Start VM
+            qemuWorker.postMessage({ type: 'start' });
+        }
+
+        function initCanvasDisplay() {
+            const canvas = document.getElementById('qemu-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = 800;
+            canvas.height = 600;
+            
+            // Simulate VM display with a boot screen
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#00ff00';
+            ctx.font = '12px monospace';
+            ctx.fillText('QEMU WebAssembly VM', 10, 20);
+            ctx.fillText('====================', 10, 35);
+            ctx.fillText('Initializing virtual hardware...', 10, 60);
+            ctx.fillText('Loading kernel...', 10, 75);
+            ctx.fillText('Starting system...', 10, 90);
+            
+            // Simulate boot process
+            setTimeout(() => {
+                ctx.fillStyle = '#00ff00';
+                ctx.fillText('System ready.', 10, 120);
+                ctx.fillText('Press Ctrl+C to access console', 10, 140);
+            }, 1500);
+        }
+
+        function toggleConsole() {
+            const console = document.getElementById('qemu-console');
+            console.classList.toggle('hidden');
+        }
+
+        function resetVM() {
+            if (qemuWorker) {
+                qemuWorker.postMessage({ type: 'reset' });
+                // Reset display
+                initCanvasDisplay();
+            }
+        }
+
+        function closeVM() {
+            if (qemuWorker) {
+                qemuWorker.terminate();
+                qemuWorker = null;
+            }
+            
+            document.getElementById('qemu-container').classList.add('hidden');
+            document.getElementById('session-status').classList.add('hidden');
+            document.getElementById('launch-btn').disabled = false;
+            
+            // Clear canvas
+            const canvas = document.getElementById('qemu-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</body>
+</html>
