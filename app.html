@@ -158,11 +158,11 @@
             <!-- VM Session Section -->
             <div id="vm-section" class="mb-8 hidden">
                 <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
-                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Browser-based Linux VM (LinuxOnTab)</h2>
+                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Browser-based Linux VM (v86)</h2>
                     
                     <div id="vm-controls" class="mb-4">
                         <button onclick="launchQemuVM()" id="launch-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                            Launch Linux VM
+                            Launch v86 Linux VM
                         </button>
                     </div>
                     
@@ -175,7 +175,7 @@
                     
                     <div id="qemu-container" class="hidden">
                         <div id="qemu-display" class="w-full h-[600px] bg-black rounded-lg overflow-hidden relative">
-                            <iframe id="qemu-iframe" src="https://linuxontab.com/" class="w-full h-full border-0" allow="cross-origin-isolated"></iframe>
+                            <iframe id="qemu-iframe" src="https://copy.sh/v86/?profile=alpine-linux" class="w-full h-full border-0" allow="cross-origin-isolated"></iframe>
                         </div>
                         <div class="flex space-x-2 mt-3">
                             <button onclick="reloadVM()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
@@ -386,10 +386,10 @@
 
             launchBtn.disabled = true;
             sessionStatus.classList.remove('hidden');
-            statusText.textContent = 'Loading Linux VM...';
+            statusText.textContent = 'Loading v86 Linux VM...';
 
             try {
-                // Show the VM container with LinuxOnTab
+                // Show the VM container with v86
                 document.getElementById('session-status').classList.add('hidden');
                 document.getElementById('qemu-container').classList.remove('hidden');
                 
