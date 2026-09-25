@@ -10,6 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    
+    <!-- Uploadcare File Uploader -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@1/web/uc-file-uploader-regular.min.css" />
+    <script type="module">
+        import * as UC from 'https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@1/web/file-uploader.min.js';
+        UC.defineComponents(UC);
+    </script>
+    
     <script>
         const SupabaseClient = supabase.createClient('https://slswhyrlxivgndwswiqg.supabase.co', 'sb_publishable_VY4MGCaxKL1_guVdpz4_Hw_Wz6ju4-v');
         
@@ -21,6 +29,14 @@
             defaultProfile: 'linux-x86_64-pc-graphics',
             memory: '512M',
             cpus: 2
+        };
+        
+        // Uploadcare configuration
+        const UPLOADCARE_CONFIG = {
+            pubkey: '8c01ec06f36bc582f543',
+            sourceList: 'local, url, dropbox, onedrive, gdrive, gphotos, box',
+            multiple: false,
+            userAgentIntegration: 'llm-js'
         };
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
@@ -45,14 +61,7 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .file-drop-zone {
-            border: 2px dashed #cbd5e1;
-            transition: all 0.3s ease;
-        }
-        .file-drop-zone:hover, .file-drop-zone.dragover {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-        }
+
         .kasm-iframe {
             width: 100%;
             height: 600px;
@@ -119,18 +128,42 @@
                 <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
                     <h2 class="text-sm font-semibold text-zinc-900 mb-4">Upload Files for VM Analysis</h2>
                     
-                    <div id="drop-zone" class="file-drop-zone rounded-lg p-8 text-center cursor-pointer mb-4">
-                        <i data-lucide="upload-cloud" class="w-8 h-8 text-zinc-400 mx-auto mb-3"></i>
-                        <p class="text-xs text-zinc-600 mb-2">Drag and drop files here or click to browse</p>
-                        <p class="text-xs text-zinc-400">Support for executables, scripts, and archives</p>
-                        <input type="file" id="file-input" class="hidden" multiple>
+                    <!-- Uploadcare File Uploader Configuration -->
+                    <uc-config
+                        ctx-name="castlehat-uploader"
+                        pubkey="8c01ec06f36bc582f543"
+                        source-list="local, url, dropbox, onedrive, gdrive, gphotos, box"
+                        multiple="false"
+                        userAgentIntegration="llm-js"
+                    ></uc-config>
+                    
+                    <!-- Upload Context Provider for event handling -->
+                    <uc-upload-ctx-provider ctx-name="castlehat-uploader"></uc-upload-ctx-provider>
+                    
+                    <!-- Uploadcare Regular File Uploader -->
+                    <uc-file-uploader-regular ctx-name="castlehat-uploader"></uc-file-uploader-regular>
+                    
+                    <!-- Upload Status Display -->
+                    <div id="upload-status" class="hidden mt-4">
+                        <div class="bg-white border border-zinc-200 rounded-md p-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-medium text-zinc-900">File uploaded successfully</p>
+                                    <p class="text-xs text-zinc-500" id="upload-file-name"></p>
+                                </div>
+                                <button onclick="copyUploadInfo()" class="text-xs text-accent-600 hover:text-accent-700">
+                                    Copy Info
+                                </button>
+                            </div>
+                            <div class="mt-3 space-y-1">
+                                <p class="text-xs text-zinc-600">UUID: <span id="upload-uuid" class="font-mono text-zinc-900"></span></p>
+                                <p class="text-xs text-zinc-600">CDN URL: <span id="upload-cdn-url" class="font-mono text-zinc-900 break-all"></span></p>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div id="file-list" class="space-y-2 mb-4"></div>
-                    
-                    <button onclick="uploadFiles()" id="upload-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        Upload Files
-                    </button>
                 </div>
             </div>
 
@@ -192,13 +225,7 @@
                 </div>
             </div>
 
-            <!-- Uploaded Files Section -->
-            <div id="uploaded-files-section" class="mb-8 hidden">
-                <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
-                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Uploaded Files</h2>
-                    <div id="uploaded-files-list" class="space-y-2"></div>
-                </div>
-            </div>
+
         </div>
     </main>
 
@@ -209,6 +236,7 @@
         let selectedFiles = [];
         let currentUser = null;
         let currentSessionId = null;
+        let uploadedFileInfo = null;
 
         // Check for existing session on page load and redirect if not authenticated
         async function checkExistingSession() {
@@ -284,10 +312,12 @@
                     resendBtn.classList.add('hidden');
                 }
                 
-                loadUploadedFiles();
+                // Initialize Uploadcare event handler
+                initUploadcare();
                 
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
+                uploadedFileInfo = null;
                 
                 // Redirect to login page
                 window.location.href = '/login.html';
@@ -296,58 +326,59 @@
             }
         });
 
-        // File upload functions
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-
-        dropZone.addEventListener('click', () => fileInput.click());
-        
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        function handleFiles(files) {
-            selectedFiles = Array.from(files);
-            updateFileList();
-            document.getElementById('upload-btn').disabled = selectedFiles.length === 0;
+        // Uploadcare file upload handling
+        function initUploadcare() {
+            const ctx = document.querySelector('uc-upload-ctx-provider[ctx-name="castlehat-uploader"]');
+            if (ctx) {
+                ctx.addEventListener('change', (e) => {
+                    // e.detail is an OutputCollectionState
+                    e.detail.successEntries.forEach((f) => {
+                        console.log('Upload successful:', {
+                            uuid: f.uuid,
+                            cdnUrl: f.cdnUrl,
+                            name: f.name,
+                            size: f.size
+                        });
+                        
+                        // Store upload info
+                        uploadedFileInfo = {
+                            uuid: f.uuid,
+                            cdnUrl: f.cdnUrl,
+                            name: f.name,
+                            size: f.size
+                        };
+                        
+                        // Display upload status
+                        displayUploadSuccess(uploadedFileInfo);
+                    });
+                });
+            }
         }
 
-        function updateFileList() {
-            const fileList = document.getElementById('file-list');
-            fileList.innerHTML = selectedFiles.map((file, index) => `
-                <div class="flex items-center justify-between bg-white border border-zinc-200 rounded-md px-3 py-2">
-                    <div class="flex items-center space-x-2">
-                        <i data-lucide="file" class="w-4 h-4 text-zinc-400"></i>
-                        <span class="text-xs text-zinc-700">${file.name}</span>
-                        <span class="text-xs text-zinc-400">(${formatFileSize(file.size)})</span>
-                    </div>
-                    <button onclick="removeFile(${index})" class="text-zinc-400 hover:text-red-600">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            `).join('');
+        function displayUploadSuccess(fileInfo) {
+            const uploadStatus = document.getElementById('upload-status');
+            const fileName = document.getElementById('upload-file-name');
+            const uuid = document.getElementById('upload-uuid');
+            const cdnUrl = document.getElementById('upload-cdn-url');
+            
+            uploadStatus.classList.remove('hidden');
+            fileName.textContent = fileInfo.name;
+            uuid.textContent = fileInfo.uuid;
+            cdnUrl.textContent = fileInfo.cdnUrl;
+            
             lucide.createIcons();
         }
 
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-            document.getElementById('upload-btn').disabled = selectedFiles.length === 0;
+        function copyUploadInfo() {
+            if (!uploadedFileInfo) return;
+            
+            const info = `UUID: ${uploadedFileInfo.uuid}\nCDN URL: ${uploadedFileInfo.cdnUrl}`;
+            navigator.clipboard.writeText(info).then(() => {
+                alert('Upload info copied to clipboard');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy upload info');
+            });
         }
 
         function formatFileSize(bytes) {
@@ -356,120 +387,6 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        async function uploadFiles() {
-            if (selectedFiles.length === 0 || !currentUser) return;
-
-            const uploadBtn = document.getElementById('upload-btn');
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Uploading...';
-
-            try {
-                // Upload files to Supabase storage using user ID for better organization
-                for (const file of selectedFiles) {
-                    const fileName = `${currentUser.id}/${Date.now()}_${file.name}`;
-                    const { data, error } = await SupabaseClient.storage
-                        .from('uploaded-files')
-                        .upload(fileName, file);
-
-                    if (error) throw error;
-                }
-
-                alert('Files uploaded successfully');
-                selectedFiles = [];
-                updateFileList();
-                loadUploadedFiles();
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Upload failed: ' + error.message);
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Upload Files';
-            }
-        }
-
-        async function loadUploadedFiles() {
-            if (!currentUser) return;
-
-            try {
-                const { data, error } = await SupabaseClient.storage
-                    .from('uploaded-files')
-                    .list(currentUser.id, {
-                        limit: 100,
-                        offset: 0,
-                        sortBy: { column: 'created_at', order: 'desc' }
-                    });
-
-                if (error) throw error;
-
-                const uploadedFilesSection = document.getElementById('uploaded-files-section');
-                const uploadedFilesList = document.getElementById('uploaded-files-list');
-
-                if (data && data.length > 0) {
-                    uploadedFilesSection.classList.remove('hidden');
-                    uploadedFilesList.innerHTML = data.map(file => `
-                        <div class="flex items-center justify-between bg-white border border-zinc-200 rounded-md px-3 py-2">
-                            <div class="flex items-center space-x-2">
-                                <i data-lucide="file" class="w-4 h-4 text-zinc-400"></i>
-                                <span class="text-xs text-zinc-700">${file.name}</span>
-                                <span class="text-xs text-zinc-400">(${formatFileSize(file.metadata?.size || 0)})</span>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="downloadFile('${file.name}')" class="text-xs text-accent-600 hover:text-accent-700">
-                                    Download
-                                </button>
-                                <button onclick="deleteFile('${file.name}')" class="text-xs text-red-600 hover:text-red-700">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-                    lucide.createIcons();
-                } else {
-                    uploadedFilesSection.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('Load files error:', error);
-            }
-        }
-
-        async function downloadFile(fileName) {
-            try {
-                const { data, error } = await SupabaseClient.storage
-                    .from('uploaded-files')
-                    .download(`${currentUser.id}/${fileName}`);
-
-                if (error) throw error;
-
-                const url = URL.createObjectURL(data);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                a.click();
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error('Download error:', error);
-                alert('Download failed');
-            }
-        }
-
-        async function deleteFile(fileName) {
-            if (!confirm('Are you sure you want to delete this file?')) return;
-            
-            try {
-                const { error } = await SupabaseClient.storage
-                    .from('uploaded-files')
-                    .remove([`${currentUser.id}/${fileName}`]);
-
-                if (error) throw error;
-
-                alert('File deleted successfully');
-                loadUploadedFiles();
-            } catch (error) {
-                console.error('Delete error:', error);
-                alert('Delete failed: ' + error.message);
-            }
         }
 
         // QEMU WebAssembly functions
