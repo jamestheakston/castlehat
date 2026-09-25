@@ -8,28 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-    
-    <!-- Uploadcare File Uploader -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@1/web/uc-file-uploader-regular.min.css" />
     <script type="module">
         import * as UC from 'https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@1/web/file-uploader.min.js';
         UC.defineComponents(UC);
     </script>
-    
     <script>
         const SupabaseClient = supabase.createClient('https://slswhyrlxivgndwswiqg.supabase.co', 'sb_publishable_VY4MGCaxKL1_guVdpz4_Hw_Wz6ju4-v');
-        
-        // QEMU WebAssembly Configuration
-        const QEMU_CONFIG = {
-            // Using ktock/qemu-wasm demo infrastructure
-            demoUrl: 'https://ktock.github.io/qemu-wasm-demo/',
-            wasmUrl: 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64/',
-            defaultProfile: 'linux-x86_64-pc-graphics',
-            memory: '512M',
-            cpus: 2
-        };
         
         // Uploadcare configuration
         const UPLOADCARE_CONFIG = {
@@ -39,7 +24,6 @@
             userAgentIntegration: 'llm-js'
         };
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
     <script>
         tailwind.config = {
             theme: {
@@ -174,21 +158,11 @@
             <!-- VM Session Section -->
             <div id="vm-section" class="mb-8 hidden">
                 <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
-                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Browser-based VM (QEMU WebAssembly)</h2>
+                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Browser-based Linux VM (LinuxOnTab)</h2>
                     
                     <div id="vm-controls" class="mb-4">
-                        <div class="mb-3">
-                            <label class="text-xs text-zinc-600 mb-1 block">Select Pre-configured VM Image</label>
-                            <select id="qemu-profile" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors">
-                                <option value="alpine-linux">Alpine Linux (Secure)</option>
-                                <option value="ubuntu-minimal">Ubuntu Minimal (Analysis)</option>
-                                <option value="kali-linux">Kali Linux (Security Testing)</option>
-                                <option value="fedora-workstation">Fedora Workstation (Development)</option>
-                            </select>
-                        </div>
-                        
                         <button onclick="launchQemuVM()" id="launch-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                            Launch Secure VM
+                            Launch Linux VM
                         </button>
                     </div>
                     
@@ -201,25 +175,11 @@
                     
                     <div id="qemu-container" class="hidden">
                         <div id="qemu-display" class="w-full h-[600px] bg-black rounded-lg overflow-hidden relative">
-                            <div id="qemu-iframe-container" class="w-full h-full">
-                                <iframe id="qemu-iframe" class="w-full h-full border-0" allow="cross-origin-isolated"></iframe>
-                            </div>
-                            <div id="qemu-terminal" class="absolute top-2 right-2 w-96 h-48 bg-zinc-900 rounded-lg shadow-lg hidden z-10">
-                                <div class="flex items-center justify-between bg-zinc-800 px-3 py-1 rounded-t-lg">
-                                    <span class="text-xs text-zinc-300">Terminal</span>
-                                    <button onclick="toggleTerminal()" class="text-zinc-400 hover:text-white">
-                                        <i data-lucide="x" class="w-3 h-3"></i>
-                                    </button>
-                                </div>
-                                <div id="terminal" class="h-40 p-2"></div>
-                            </div>
+                            <iframe id="qemu-iframe" src="https://linuxontab.com/" class="w-full h-full border-0" allow="cross-origin-isolated"></iframe>
                         </div>
                         <div class="flex space-x-2 mt-3">
-                            <button onclick="toggleTerminal()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                                Toggle Terminal
-                            </button>
-                            <button onclick="restartVM()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                                Restart VM
+                            <button onclick="reloadVM()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Reload VM
                             </button>
                             <button onclick="closeVM()" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
                                 Close VM
@@ -419,25 +379,19 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // QEMU WebAssembly functions
-        let qemuInstance = null;
-        let term = null;
-        let fitAddon = null;
-
         async function launchQemuVM() {
-            const profile = document.getElementById('qemu-profile').value;
-
             const launchBtn = document.getElementById('launch-btn');
             const sessionStatus = document.getElementById('session-status');
             const statusText = document.getElementById('status-text');
 
             launchBtn.disabled = true;
             sessionStatus.classList.remove('hidden');
-            statusText.textContent = 'Loading QEMU WebAssembly...';
+            statusText.textContent = 'Loading Linux VM...';
 
             try {
-                // Load QEMU WebAssembly from ktock/qemu-wasm demo
-                await loadQemuDemo(profile);
+                // Show the VM container with LinuxOnTab
+                document.getElementById('session-status').classList.add('hidden');
+                document.getElementById('qemu-container').classList.remove('hidden');
                 
                 statusText.textContent = 'VM started successfully';
                 setTimeout(() => {
@@ -445,147 +399,23 @@
                 }, 2000);
 
             } catch (error) {
-                console.error('QEMU launch error:', error);
+                console.error('VM launch error:', error);
                 statusText.textContent = 'Failed to launch VM: ' + error.message;
                 launchBtn.disabled = false;
             }
         }
 
-        async function loadQemuDemo(profile, diskImage) {
-            const qemuContainer = document.getElementById('qemu-container');
+        function reloadVM() {
             const qemuIframe = document.getElementById('qemu-iframe');
-            const statusText = document.getElementById('status-text');
-            
-            // Map profile names to ktock/qemu-wasm demo URLs
-            const profileUrls = {
-                'alpine-linux': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html',
-                'ubuntu-minimal': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html', // Using Alpine as placeholder
-                'kali-linux': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html', // Using Alpine as placeholder
-                'fedora-workstation': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html' // Using Alpine as placeholder
-            };
-            
-            const demoUrl = profileUrls[profile] || profileUrls['alpine-linux'];
-            
-            // Set up message handler for communication with QEMU
-            window.addEventListener('message', handleQemuMessage);
-            
-            // Load the demo in iframe
-            qemuIframe.src = demoUrl;
-            
-            // Initialize terminal
-            initTerminal();
-            
-            // Show container
-            document.getElementById('session-status').classList.add('hidden');
-            qemuContainer.classList.remove('hidden');
-            
-            // Wait for iframe to load
-            qemuIframe.onload = function() {
-                console.log('QEMU demo loaded');
-                statusText.textContent = 'QEMU environment ready';
-            };
-        }
-
-        function handleQemuMessage(event) {
-            // Handle messages from QEMU iframe
-            if (event.data && event.data.type === 'qemu-output') {
-                if (term) {
-                    term.write(event.data.output);
-                }
-            }
-        }
-
-        function initTerminal() {
-            const terminalElement = document.getElementById('terminal');
-            
-            // Initialize xterm.js
-            term = new Terminal({
-                cursorBlink: true,
-                fontSize: 12,
-                fontFamily: 'Courier New, monospace',
-                theme: {
-                    background: '#1a1a1a',
-                    foreground: '#00ff00',
-                    cursor: '#00ff00'
-                }
-            });
-            
-            // Load fit addon
-            fitAddon = new FitAddon.FitAddon();
-            term.loadAddon(fitAddon);
-            
-            // Open terminal
-            term.open(terminalElement);
-            fitAddon.fit();
-            
-            // Welcome message
-            term.writeln('QEMU WebAssembly Terminal');
-            term.writeln('========================');
-            term.writeln('VM is running in the iframe above.');
-            term.writeln('This terminal can be used for additional commands.');
-            term.writeln('');
-            
-            // Handle terminal input
-            term.onData(data => {
-                // For demo purposes, just echo the input
-                term.write(data);
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                fitAddon.fit();
-            });
-        }
-
-        function toggleTerminal() {
-            const terminal = document.getElementById('qemu-terminal');
-            terminal.classList.toggle('hidden');
-            
-            if (!terminal.classList.contains('hidden') && fitAddon) {
-                fitAddon.fit();
-            }
-        }
-
-        function restartVM() {
-            const qemuIframe = document.getElementById('qemu-iframe');
-            const statusText = document.getElementById('status-text');
-            const sessionStatus = document.getElementById('session-status');
-            
-            sessionStatus.classList.remove('hidden');
-            statusText.textContent = 'Restarting VM...';
-            
-            // Reload the iframe to restart VM
             qemuIframe.src = qemuIframe.src;
-            
-            setTimeout(() => {
-                sessionStatus.classList.add('hidden');
-                if (term) {
-                    term.clear();
-                    term.writeln('QEMU WebAssembly Terminal');
-                    term.writeln('========================');
-                    term.writeln('VM restarted.');
-                    term.writeln('');
-                }
-            }, 2000);
         }
 
         function closeVM() {
             const qemuContainer = document.getElementById('qemu-container');
-            const qemuIframe = document.getElementById('qemu-iframe');
             const sessionStatus = document.getElementById('session-status');
             
-            // Remove message handler
-            window.removeEventListener('message', handleQemuMessage);
-            
             // Clear iframe
-            qemuIframe.src = '';
-            
-            // Dispose terminal
-            if (term) {
-                term.dispose();
-                term = null;
-                fitAddon = null;
-            }
+            document.getElementById('qemu-iframe').src = '';
             
             // Hide container
             qemuContainer.classList.add('hidden');
