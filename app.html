@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/v86@0.5.462/build/libv86.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@1/web/uc-file-uploader-regular.min.css" />
     <script type="module">
         import * as UC from 'https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@1/web/file-uploader.min.js';
@@ -175,11 +176,14 @@
                     
                     <div id="qemu-container" class="hidden">
                         <div id="qemu-display" class="w-full h-[600px] bg-black rounded-lg overflow-hidden relative">
-                            <iframe id="qemu-iframe" src="https://copy.sh/v86/?profile=alpine-linux" class="w-full h-full border-0" allow="cross-origin-isolated"></iframe>
+                            <div id="screen_container" class="w-full h-full">
+                                <div style="white-space: pre; font: 14px monospace; line-height: 14px"></div>
+                                <canvas style="display: none"></canvas>
+                            </div>
                         </div>
                         <div class="flex space-x-2 mt-3">
-                            <button onclick="reloadVM()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                                Reload VM
+                            <button onclick="restartVM()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Restart VM
                             </button>
                             <button onclick="closeVM()" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
                                 Close VM
@@ -379,6 +383,8 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
+        let emulator = null;
+
         async function launchQemuVM() {
             const launchBtn = document.getElementById('launch-btn');
             const sessionStatus = document.getElementById('session-status');
@@ -389,9 +395,26 @@
             statusText.textContent = 'Loading v86 Linux VM...';
 
             try {
-                // Show the VM container with v86
-                document.getElementById('session-status').classList.add('hidden');
+                // Show the VM container
                 document.getElementById('qemu-container').classList.remove('hidden');
+                
+                // Initialize v86 emulator
+                emulator = new V86({
+                    wasm_path: "https://cdn.jsdelivr.net/npm/v86@0.5.462/build/v86.wasm",
+                    memory_size: 512 * 1024 * 1024,
+                    vga_memory_size: 8 * 1024 * 1024,
+                    screen_container: document.getElementById("screen_container"),
+                    bios: {
+                        url: "https://cdn.jsdelivr.net/npm/v86@0.5.462/bios/seabios.bin",
+                    },
+                    vga_bios: {
+                        url: "https://cdn.jsdelivr.net/npm/v86@0.5.462/bios/vgabios.bin",
+                    },
+                    cdrom: {
+                        url: "https://cdn.jsdelivr.net/npm/v86@0.5.462/images/linux.iso",
+                    },
+                    autostart: true,
+                });
                 
                 statusText.textContent = 'VM started successfully';
                 setTimeout(() => {
@@ -405,17 +428,21 @@
             }
         }
 
-        function reloadVM() {
-            const qemuIframe = document.getElementById('qemu-iframe');
-            qemuIframe.src = qemuIframe.src;
+        function restartVM() {
+            if (emulator) {
+                emulator.restart();
+            }
         }
 
         function closeVM() {
             const qemuContainer = document.getElementById('qemu-container');
             const sessionStatus = document.getElementById('session-status');
             
-            // Clear iframe
-            document.getElementById('qemu-iframe').src = '';
+            // Stop emulator
+            if (emulator) {
+                emulator.stop();
+                emulator = null;
+            }
             
             // Hide container
             qemuContainer.classList.add('hidden');
