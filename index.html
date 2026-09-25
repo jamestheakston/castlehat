@@ -102,10 +102,10 @@
             </nav>
 
             <div class="flex items-center space-x-3">
-                <button onclick="openModal('Sign In')" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Log In</button>
-                <button onclick="openModal('Get Started')" class="bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium px-3.5 py-2 rounded-md transition-all shadow-sm">
+                <a href="/login.html" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Log In</a>
+                <a href="/signup.html" class="bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium px-3.5 py-2 rounded-md transition-all shadow-sm">
                     Get Started
-                </button>
+                </a>
             </div>
         </div>
     </header>
@@ -126,11 +126,11 @@
             </p>
             
             <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-                <button onclick="openModal('Launch VM')" class="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium px-5 py-2.5 rounded-md transition-all shadow-sm flex items-center justify-center space-x-2">
+                <a href="/app.html" class="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium px-5 py-2.5 rounded-md transition-all shadow-sm flex items-center justify-center space-x-2">
                     <i data-lucide="play" class="w-3.5 h-3.5 fill-current text-accent-400"></i>
                     <span>Launch Sandbox</span>
-                </button>
-                <a href="#sandbox" class="w-full sm:w-auto bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-medium px-5 py-2.5 rounded-md border border-zinc-200 transition-all flex items-center justify-center space-x-2">
+                </a>
+                <a href="/app.html" class="w-full sm:w-auto bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-medium px-5 py-2.5 rounded-md border border-zinc-200 transition-all flex items-center justify-center space-x-2">
                     <i data-lucide="terminal" class="w-3.5 h-3.5 text-zinc-500"></i>
                     <span>Test CLI Demo</span>
                 </a>
@@ -215,56 +215,15 @@
             </div>
             <p>&copy; 2026 Castlehat Labs.</p>
             <div class="flex space-x-4 text-zinc-500">
-                <a href="#" class="hover:text-zinc-900">Privacy</a>
-                <a href="#" class="hover:text-zinc-900">Terms</a>
+                <a href="/privacy.html" class="hover:text-zinc-900">Privacy</a>
+                <a href="/terms.html" class="hover:text-zinc-900">Terms</a>
             </div>
         </div>
     </footer>
 
-    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/10 backdrop-blur-xs hidden">
-        <div class="bg-white border border-zinc-200 rounded-lg p-6 max-w-xs w-full mx-4 shadow-lg relative">
-            <button onclick="closeModal()" class="absolute top-3 right-3 text-zinc-400 hover:text-zinc-600">
-                <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-            <div class="mb-4 flex items-center space-x-3">
-                <div class="w-8 h-8 flex items-center justify-center">
-                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                        <path fill="#000000" d="M254.25 15.344c-132.537 0-240.188 107.62-240.188 240.156 0 132.537 107.65 240.188 240.188 240.188 132.537 0 240.156-107.65 240.156-240.188 0-132.537-107.62-240.156-240.156-240.156zm0 18.687c122.436 0 221.47 99.034 221.47 221.47 0 65.65-28.465 124.583-73.75 165.125V238.75l14-22.78h-7.595L364 101.5l-43.813 114.47h-8.156l14.595 22.78v33.875h-36.813v-88.188l14.625-22.78h-7.593l-44.406-114.47-44.375 114.47h-7.594l14.03 22.78v123.22h-37.375v-18.094l14.594-22.782h-8.19l-43.78-114.467L95.344 266.78H87.75l14.03 22.783V416.25C59.25 375.9 32.75 318.83 32.75 255.5c0-122.436 99.064-221.47 221.5-221.47zm1.094 160.532h18.687v36.344h-18.686v-36.344zm110.156 87.97h18.688v36.312H365.5V282.53zm-246.656 22.03h18.687v36.344h-18.686v-36.344zm50.875 29.407h18.686v36.342H169.72V333.97zm170.81 30.5h18.69v36.342h-18.69V364.47z"></path>
-                    </svg>
-                </div>
-                <h3 id="modal-title" class="text-sm font-semibold text-zinc-900">Get Started</h3>
-            </div>
-            <p class="text-xs text-zinc-500 mb-4">Enter your email to request sandbox testing cluster access.</p>
-            <form onsubmit="handleFormSubmit(event)" class="space-y-3">
-                <input type="email" required placeholder="analyst@domain.com" class="w-full bg-zinc-50 border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors">
-                <button type="submit" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">Continue</button>
-            </form>
-            <div id="success-msg" class="hidden mt-3 p-2.5 bg-accent-50 border border-accent-100 text-accent-700 text-xs rounded-md text-center">
-                Access token sent to your email.
-            </div>
-        </div>
-    </div>
-
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
-
-        function openModal(actionName) {
-            const modal = document.getElementById('modal');
-            document.getElementById('modal-title').textContent = `Castlehat — ${actionName}`;
-            modal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-            document.getElementById('success-msg').classList.add('hidden');
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            document.getElementById('success-msg').classList.remove('hidden');
-            setTimeout(() => closeModal(), 2000);
-        }
 
         function runCommand(cmd) {
             const output = document.getElementById('terminal-output');

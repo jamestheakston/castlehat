@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Castlehat</title>
+    <meta name="description" content="Castlehat Privacy Policy - Secure VM Sandbox Platform">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-zinc-900 antialiased min-h-screen flex flex-col">
+
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
+        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-6 h-6 flex items-center justify-center">
+                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <path fill="#000000" d="M254.25 15.344c-132.537 0-240.188 107.62-240.188 240.156 0 132.537 107.65 240.188 240.188 240.188 132.537 0 240.156-107.65 240.156-240.188 0-132.537-107.62-240.156-240.156-240.156zm0 18.687c122.436 0 221.47 99.034 221.47 221.47 0 65.65-28.465 124.583-73.75 165.125V238.75l14-22.78h-7.595L364 101.5l-43.813 114.47h-8.156l14.595 22.78v33.875h-36.813v-88.188l14.625-22.78h-7.593l-44.406-114.47-44.375 114.47h-7.594l14.03 22.78v123.22h-37.375v-18.094l14.594-22.782h-8.19l-43.78-114.467L95.344 266.78H87.75l14.03 22.783V416.25C59.25 375.9 32.75 318.83 32.75 255.5c0-122.436 99.064-221.47 221.5-221.47zm1.094 160.532h18.687v36.344h-18.686v-36.344zm110.156 87.97h18.688v36.312H365.5V282.53zm-246.656 22.03h18.687v36.344h-18.686v-36.344zm50.875 29.407h18.686v36.342H169.72V333.97zm170.81 30.5h18.69v36.342h-18.69V364.47z"></path>
+                    </svg>
+                </div>
+                <span class="font-medium tracking-tight text-zinc-900 text-sm">Castlehat</span>
+            </div>
+            
+            <nav class="flex items-center space-x-6 text-xs text-zinc-600 font-medium">
+                <a href="/index.html" class="hover:text-zinc-900 transition-colors">Home</a>
+                <a href="/terms.html" class="hover:text-zinc-900 transition-colors">Terms</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow pt-32 pb-16">
+        <div class="max-w-3xl mx-auto px-6">
+            <h1 class="text-3xl font-semibold text-zinc-900 mb-8">Privacy Policy</h1>
+            
+            <div class="prose prose-sm text-zinc-600 space-y-6">
+                <p><strong>Last Updated:</strong> September 25, 2026</p>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">1. Information We Collect</h2>
+                <p>Castlehat collects the following types of information:</p>
+                <ul>
+                    <li><strong>Authentication Data:</strong> GitHub OAuth tokens and user profile information (username, email)</li>
+                    <li><strong>Usage Data:</strong> VM session logs, file upload records, and system performance metrics</li>
+                    <li><strong>Technical Data:</strong> IP addresses, browser information, and device identifiers</li>
+                </ul>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">2. How We Use Your Information</h2>
+                <p>We use your information to:</p>
+                <ul>
+                    <li>Provide and maintain our VM sandbox service</li>
+                    <li>Authenticate users and manage access permissions</li>
+                    <li>Monitor system performance and security</li>
+                    <li>Improve our services and develop new features</li>
+                    <li>Communicate with you about service updates and security alerts</li>
+                </ul>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">3. Data Storage and Security</h2>
+                <p>We implement industry-standard security measures to protect your data:</p>
+                <ul>
+                    <li>All data is encrypted in transit using HTTPS/TLS</li>
+                    <li>Authentication tokens are stored securely using industry best practices</li>
+                    <li>Regular security audits and penetration testing</li>
+                    <li>Isolated VM environments ensure user data remains compartmentalized</li>
+                </ul>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">4. File Upload and Storage</h2>
+                <p>When you upload files through our service:</p>
+                <ul>
+                    <li>Files are processed through Uploadcare's secure CDN infrastructure</li>
+                    <li>File metadata and access tokens are stored in our database</li>
+                    <li>You retain ownership of your uploaded content</li>
+                    <li>Files are automatically deleted according to our data retention policies</li>
+                </ul>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">5. Third-Party Services</h2>
+                <p>We use the following third-party services:</p>
+                <ul>
+                    <li><strong>Supabase:</strong> Authentication, database, and real-time services</li>
+                    <li><strong>Uploadcare:</strong> File upload and CDN delivery services</li>
+                    <li><strong>GitHub:</strong> OAuth authentication provider</li>
+                </ul>
+                <p>These services have their own privacy policies which we encourage you to review.</p>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">6. Data Retention</h2>
+                <p>We retain user data for the following periods:</p>
+                <ul>
+                    <li><strong>Authentication Data:</strong> Retained while your account is active</li>
+                    <li><strong>Session Data:</strong> Retained for 30 days after session completion</li>
+                    <li><strong>Uploaded Files:</strong> Retained for 90 days from upload date unless deleted earlier</li>
+                    <li><strong>System Logs:</strong> Retained for 90 days for security and debugging purposes</li>
+                </ul>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">7. Your Rights</h2>
+                <p>You have the right to:</p>
+                <ul>
+                    <li>Access your personal data</li>
+                    <li>Request deletion of your account and associated data</li>
+                    <li>Export your data in a machine-readable format</li>
+                    <li>Opt out of non-essential data processing</li>
+                    <li>Update your account information and preferences</li>
+                </ul>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">8. Cookies and Tracking</h2>
+                <p>We use cookies and similar technologies to:</p>
+                <ul>
+                    <li>Maintain your authentication session</li>
+                    <li>Remember your preferences</li>
+                    <li>Analyze service usage and performance</li>
+                </ul>
+                <p>You can manage cookie preferences through your browser settings.</p>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">9. Children's Privacy</h2>
+                <p>Castlehat is not intended for use by children under the age of 18. We do not knowingly collect personal information from children.</p>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">10. International Data Transfers</h2>
+                <p>Your data may be transferred to and processed in countries other than your own. We ensure adequate protection of your data in accordance with applicable data protection laws.</p>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">11. Changes to This Policy</h2>
+                <p>We may update this privacy policy from time to time. We will notify you of significant changes by posting the new policy on our website and updating the "Last Updated" date.</p>
+                
+                <h2 class="text-lg font-semibold text-zinc-900">12. Contact Us</h2>
+                <p>If you have questions about this Privacy Policy or our data practices, please contact us through our GitHub repository or other official communication channels.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-zinc-100 py-6 px-6 text-center text-xs text-zinc-500">
+        <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 flex items-center justify-center">
+                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <path fill="#000000" d="M254.25 15.344c-132.537 0-240.188 107.62-240.188 240.156 0 132.537 107.65 240.188 240.188 240.188 132.537 0 240.156-107.65 240.156-240.188 0-132.537-107.62-240.156-240.156-240.156zm0 18.687c122.436 0 221.47 99.034 221.47 221.47 0 65.65-28.465 124.583-73.75 165.125V238.75l14-22.78h-7.595L364 101.5l-43.813 114.47h-8.156l14.595 22.78v33.875h-36.813v-88.188l14.625-22.78h-7.593l-44.406-114.47-44.375 114.47h-7.594l14.03 22.78v123.22h-37.375v-18.094l14.594-22.782h-8.19l-43.78-114.467L95.344 266.78H87.75l14.03 22.783V416.25C59.25 375.9 32.75 318.83 32.75 255.5c0-122.436 99.064-221.47 221.5-221.47zm1.094 160.532h18.687v36.344h-18.686v-36.344zm110.156 87.97h18.688v36.312H365.5V282.53zm-246.656 22.03h18.687v36.344h-18.686v-36.344zm50.875 29.407h18.686v36.342H169.72V333.97zm170.81 30.5h18.69v36.342h-18.69V364.47z"></path>
+                    </svg>
+                </div>
+                <span class="font-medium text-zinc-700">Castlehat</span>
+            </div>
+            <p>&copy; 2026 Castlehat Labs.</p>
+            <div class="flex space-x-4 text-zinc-500">
+                <a href="/privacy.html" class="hover:text-zinc-900">Privacy</a>
+                <a href="/terms.html" class="hover:text-zinc-900">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
