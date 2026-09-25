@@ -80,62 +80,37 @@
             </div>
             
             <div class="flex items-center space-x-3">
-                <span id="user-email" class="text-xs text-zinc-600 hidden"></span>
-                <button onclick="logout()" id="logout-btn" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors hidden">Log Out</button>
+                <a href="/login.html" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Sign In</a>
             </div>
         </div>
     </header>
 
     <main class="flex-grow pt-32 px-6">
         <div class="max-w-3xl mx-auto">
-            <!-- Authentication Section -->
-            <div id="auth-section" class="mb-8">
+            <!-- User Info Section -->
+            <div id="user-info" class="mb-8 hidden">
                 <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6">
-                    <h2 class="text-sm font-semibold text-zinc-900 mb-4">Authentication</h2>
-                    
-                    <!-- Auth Tabs -->
-                    <div class="flex space-x-2 mb-4">
-                        <button onclick="showAuthTab('login')" id="login-tab" class="flex-1 text-xs font-medium py-2 rounded-md transition-colors bg-zinc-900 text-white">Sign In</button>
-                        <button onclick="showAuthTab('signup')" id="signup-tab" class="flex-1 text-xs font-medium py-2 rounded-md transition-colors bg-white text-zinc-700 border border-zinc-200">Sign Up</button>
-                    </div>
-                    
-                    <!-- Login Form -->
-                    <div id="login-form">
-                        <input type="email" id="login-email" placeholder="Email address" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
-                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
-                        <button onclick="signIn()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">Sign In</button>
-                        <button onclick="resetPassword()" class="w-full text-xs text-accent-600 hover:text-accent-700 mt-2">Forgot password?</button>
-                    </div>
-                    
-                    <!-- Signup Form -->
-                    <div id="signup-form" class="hidden">
-                        <input type="email" id="signup-email" placeholder="Email address" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
-                        <input type="password" id="signup-password" placeholder="Password (min 6 characters)" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
-                        <input type="password" id="signup-confirm-password" placeholder="Confirm password" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
-                        <button onclick="signUp()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">Create Account</button>
-                    </div>
-                    
-                    <!-- User Info -->
-                    <div id="user-info" class="hidden">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-xs text-zinc-600">Authenticated as: <span id="auth-user-email" class="font-medium text-zinc-900"></span></p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-accent-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-zinc-600">Signed in as</p>
+                                <p class="text-sm font-medium text-zinc-900" id="auth-user-email"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
                             <div id="email-verification-badge" class="hidden">
                                 <span class="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-xs">
                                     <i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i>
                                     Unverified
                                 </span>
                             </div>
-                        </div>
-                        <button onclick="resendVerificationEmail()" id="resend-verification-btn" class="hidden w-full text-xs text-accent-600 hover:text-accent-700 mb-2">Resend verification email</button>
-                    </div>
-                    
-                    <!-- Loading State -->
-                    <div id="auth-loading" class="hidden text-center py-4">
-                        <div class="inline-flex items-center space-x-2 text-xs text-zinc-600">
-                            <div class="w-4 h-4 border-2 border-zinc-300 border-t-accent-600 rounded-full animate-spin"></div>
-                            <span>Processing...</span>
+                            <button onclick="logout()" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Sign Out</button>
                         </div>
                     </div>
+                    <button onclick="resendVerificationEmail()" id="resend-verification-btn" class="hidden mt-3 w-full text-xs text-accent-600 hover:text-accent-700">Resend verification email</button>
                 </div>
             </div>
 
@@ -165,21 +140,18 @@
                     <h2 class="text-sm font-semibold text-zinc-900 mb-4">Browser-based VM (QEMU WebAssembly)</h2>
                     
                     <div id="vm-controls" class="mb-4">
-                        <select id="qemu-profile" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors mb-3">
-                            <option value="linux-x86_64-pc-graphics">Linux x86_64 (Graphics)</option>
-                            <option value="linux-x86_64-pc-nographic">Linux x86_64 (Serial Console)</option>
-                            <option value="linux-aarch64-virt-graphics">Linux ARM64 (Graphics)</option>
-                            <option value="linux-aarch64-virt-nographic">Linux ARM64 (Serial Console)</option>
-                            <option value="minimal-x86_64">Minimal x86_64</option>
-                        </select>
-                        
                         <div class="mb-3">
-                            <label class="text-xs text-zinc-600 mb-1 block">Upload Disk Image (.qcow2, .iso)</label>
-                            <input type="file" id="disk-image" accept=".qcow2,.iso,.img" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors">
+                            <label class="text-xs text-zinc-600 mb-1 block">Select Pre-configured VM Image</label>
+                            <select id="qemu-profile" class="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-accent-600 transition-colors">
+                                <option value="alpine-linux">Alpine Linux (Secure)</option>
+                                <option value="ubuntu-minimal">Ubuntu Minimal (Analysis)</option>
+                                <option value="kali-linux">Kali Linux (Security Testing)</option>
+                                <option value="fedora-workstation">Fedora Workstation (Development)</option>
+                            </select>
                         </div>
                         
                         <button onclick="launchQemuVM()" id="launch-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                            Launch VM
+                            Launch Secure VM
                         </button>
                     </div>
                     
@@ -238,16 +210,17 @@
         let currentUser = null;
         let currentSessionId = null;
 
-        // Check for existing session on page load
+        // Check for existing session on page load and redirect if not authenticated
         async function checkExistingSession() {
             try {
                 const { data: { session } } = await SupabaseClient.auth.getSession();
-                if (session) {
-                    // Session exists, auth state listener will handle UI updates
-                    console.log('Existing session found');
+                if (!session) {
+                    // No session, redirect to login
+                    window.location.href = '/login.html';
                 }
             } catch (error) {
                 console.error('Session check error:', error);
+                window.location.href = '/login.html';
             }
         }
 
@@ -255,139 +228,14 @@
         checkExistingSession();
 
         // Authentication functions
-        function showAuthTab(tab) {
-            const loginTab = document.getElementById('login-tab');
-            const signupTab = document.getElementById('signup-tab');
-            const loginForm = document.getElementById('login-form');
-            const signupForm = document.getElementById('signup-form');
-            
-            if (tab === 'login') {
-                loginTab.classList.add('bg-zinc-900', 'text-white');
-                loginTab.classList.remove('bg-white', 'text-zinc-700', 'border', 'border-zinc-200');
-                signupTab.classList.remove('bg-zinc-900', 'text-white');
-                signupTab.classList.add('bg-white', 'text-zinc-700', 'border', 'border-zinc-200');
-                loginForm.classList.remove('hidden');
-                signupForm.classList.add('hidden');
-            } else {
-                signupTab.classList.add('bg-zinc-900', 'text-white');
-                signupTab.classList.remove('bg-white', 'text-zinc-700', 'border', 'border-zinc-200');
-                loginTab.classList.remove('bg-zinc-900', 'text-white');
-                loginTab.classList.add('bg-white', 'text-zinc-700', 'border', 'border-zinc-200');
-                signupForm.classList.remove('hidden');
-                loginForm.classList.add('hidden');
-            }
-        }
-
-        function showAuthLoading(show) {
-            const loading = document.getElementById('auth-loading');
-            const loginForm = document.getElementById('login-form');
-            const signupForm = document.getElementById('signup-form');
-            
-            if (show) {
-                loading.classList.remove('hidden');
-                loginForm.classList.add('hidden');
-                signupForm.classList.add('hidden');
-            } else {
-                loading.classList.add('hidden');
-                // Show the appropriate form based on current tab
-                if (document.getElementById('login-tab').classList.contains('bg-zinc-900')) {
-                    loginForm.classList.remove('hidden');
-                } else {
-                    signupForm.classList.remove('hidden');
-                }
-            }
-        }
-
-        async function signIn() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            if (!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
-
-            showAuthLoading(true);
-
+        async function logout() {
             try {
-                const { data, error } = await SupabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) throw error;
-
-                // Auth state change listener will handle UI updates
+                await SupabaseClient.auth.signOut();
+                // Redirect to login page
+                window.location.href = '/login.html';
             } catch (error) {
-                console.error('Sign in error:', error);
-                alert('Sign in failed: ' + error.message);
-                showAuthLoading(false);
-            }
-        }
-
-        async function signUp() {
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirmPassword = document.getElementById('signup-confirm-password').value;
-            
-            if (!email || !password || !confirmPassword) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
-
-            showAuthLoading(true);
-
-            try {
-                const { data, error } = await SupabaseClient.auth.signUp({
-                    email: email,
-                    password: password
-                });
-
-                if (error) throw error;
-
-                if (data.user && !data.session) {
-                    // Email confirmation required
-                    alert('Registration successful! Please check your email to confirm your account.');
-                    showAuthTab('login');
-                } else if (data.session) {
-                    // Auto sign-in (if email confirmation is disabled)
-                    alert('Account created successfully!');
-                }
-            } catch (error) {
-                console.error('Sign up error:', error);
-                alert('Sign up failed: ' + error.message);
-            } finally {
-                showAuthLoading(false);
-            }
-        }
-
-        async function resetPassword() {
-            const email = document.getElementById('login-email').value;
-            
-            if (!email) {
-                alert('Please enter your email address');
-                return;
-            }
-
-            try {
-                const { error } = await SupabaseClient.auth.resetPasswordForEmail(email);
-                
-                if (error) throw error;
-                
-                alert('Password reset email sent! Check your inbox for instructions.');
-            } catch (error) {
-                console.error('Password reset error:', error);
-                alert('Password reset failed: ' + error.message);
+                console.error('Logout error:', error);
+                alert('Logout failed: ' + error.message);
             }
         }
 
@@ -409,16 +257,6 @@
             }
         }
 
-        async function logout() {
-            try {
-                await SupabaseClient.auth.signOut();
-                // Auth state change listener will handle UI updates
-            } catch (error) {
-                console.error('Logout error:', error);
-                alert('Logout failed: ' + error.message);
-            }
-        }
-
         // Auth state change listener
         SupabaseClient.auth.onAuthStateChange((event, session) => {
             console.log('Auth state changed:', event, session);
@@ -428,13 +266,8 @@
                 const userEmail = session.user.email;
                 
                 // Update UI for logged in state
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('signup-form').classList.add('hidden');
                 document.getElementById('user-info').classList.remove('hidden');
                 document.getElementById('auth-user-email').textContent = userEmail;
-                document.getElementById('user-email').textContent = userEmail;
-                document.getElementById('user-email').classList.remove('hidden');
-                document.getElementById('logout-btn').classList.remove('hidden');
                 document.getElementById('upload-section').classList.remove('hidden');
                 document.getElementById('vm-section').classList.remove('hidden');
                 
@@ -452,28 +285,12 @@
                 }
                 
                 loadUploadedFiles();
-                showAuthLoading(false);
                 
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
                 
-                // Update UI for logged out state
-                document.getElementById('login-form').classList.remove('hidden');
-                document.getElementById('user-info').classList.add('hidden');
-                document.getElementById('user-email').classList.add('hidden');
-                document.getElementById('logout-btn').classList.add('hidden');
-                document.getElementById('upload-section').classList.add('hidden');
-                document.getElementById('vm-section').classList.add('hidden');
-                document.getElementById('uploaded-files-section').classList.add('hidden');
-                document.getElementById('email-verification-badge').classList.add('hidden');
-                document.getElementById('resend-verification-btn').classList.add('hidden');
-                
-                // Clear form fields
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-password').value = '';
-                document.getElementById('signup-email').value = '';
-                document.getElementById('signup-password').value = '';
-                document.getElementById('signup-confirm-password').value = '';
+                // Redirect to login page
+                window.location.href = '/login.html';
                 
                 showAuthLoading(false);
             }
@@ -662,7 +479,6 @@
 
         async function launchQemuVM() {
             const profile = document.getElementById('qemu-profile').value;
-            const diskImage = document.getElementById('disk-image').files[0];
 
             const launchBtn = document.getElementById('launch-btn');
             const sessionStatus = document.getElementById('session-status');
@@ -674,7 +490,7 @@
 
             try {
                 // Load QEMU WebAssembly from ktock/qemu-wasm demo
-                await loadQemuDemo(profile, diskImage);
+                await loadQemuDemo(profile);
                 
                 statusText.textContent = 'VM started successfully';
                 setTimeout(() => {
@@ -691,10 +507,17 @@
         async function loadQemuDemo(profile, diskImage) {
             const qemuContainer = document.getElementById('qemu-container');
             const qemuIframe = document.getElementById('qemu-iframe');
+            const statusText = document.getElementById('status-text');
             
-            // Use ktock/qemu-wasm demo infrastructure
-            // Load the Alpine Linux x86_64 demo
-            const demoUrl = 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html';
+            // Map profile names to ktock/qemu-wasm demo URLs
+            const profileUrls = {
+                'alpine-linux': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html',
+                'ubuntu-minimal': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html', // Using Alpine as placeholder
+                'kali-linux': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html', // Using Alpine as placeholder
+                'fedora-workstation': 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html' // Using Alpine as placeholder
+            };
+            
+            const demoUrl = profileUrls[profile] || profileUrls['alpine-linux'];
             
             // Set up message handler for communication with QEMU
             window.addEventListener('message', handleQemuMessage);
