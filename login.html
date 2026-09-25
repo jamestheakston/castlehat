@@ -122,12 +122,28 @@
             showAuthLoading(true);
 
             try {
-                const { data, error } = await SupabaseClient.auth.signInWithOAuth2({
-                    provider: 'github',
-                    options: {
-                        redirectTo: `${window.location.origin}/app.html`
-                    }
-                });
+                // Try signInWithOAuth first (newer versions)
+                let result;
+                if (typeof SupabaseClient.auth.signInWithOAuth === 'function') {
+                    result = await SupabaseClient.auth.signInWithOAuth({
+                        provider: 'github',
+                        options: {
+                            redirectTo: `${window.location.origin}/app.html`
+                        }
+                    });
+                } else if (typeof SupabaseClient.auth.signInWithOAuth2 === 'function') {
+                    // Fallback to signInWithOAuth2 (older versions)
+                    result = await SupabaseClient.auth.signInWithOAuth2({
+                        provider: 'github',
+                        options: {
+                            redirectTo: `${window.location.origin}/app.html`
+                        }
+                    });
+                } else {
+                    throw new Error('OAuth authentication not available');
+                }
+
+                const { data, error } = result;
 
                 if (error) throw error;
 

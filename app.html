@@ -278,7 +278,7 @@
                 }
             } catch (error) {
                 console.error('Session check error:', error);
-                window.location.href = '/login.html';
+                // Don't redirect on error, let the auth state listener handle it
             }
         }
 
