@@ -8,17 +8,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
     <script>
         const SupabaseClient = supabase.createClient('https://slswhyrlxivgndwswiqg.supabase.co', 'sb_publishable_VY4MGCaxKL1_guVdpz4_Hw_Wz6ju4-v');
         
         // QEMU WebAssembly Configuration
         const QEMU_CONFIG = {
-            wasmUrl: 'https://cdn.jsdelivr.net/gh/rngopsorg/qemuweb@latest/packages/qemu-wasm/dist/',
+            // Using ktock/qemu-wasm demo infrastructure
+            demoUrl: 'https://ktock.github.io/qemu-wasm-demo/',
+            wasmUrl: 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64/',
             defaultProfile: 'linux-x86_64-pc-graphics',
             memory: '512M',
             cpus: 2
         };
     </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
     <script>
         tailwind.config = {
             theme: {
@@ -56,6 +61,10 @@
         }
         #qemu-canvas {
             image-rendering: pixelated;
+        }
+        #terminal {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -146,21 +155,25 @@
                     
                     <div id="qemu-container" class="hidden">
                         <div id="qemu-display" class="w-full h-[600px] bg-black rounded-lg overflow-hidden relative">
-                            <canvas id="qemu-canvas" class="w-full h-full"></canvas>
-                            <div id="qemu-console" class="absolute bottom-0 left-0 right-0 bg-zinc-900 text-green-400 font-mono text-xs p-2 hidden">
-                                <div id="qemu-console-output" class="h-32 overflow-y-auto"></div>
-                                <div class="flex items-center mt-2">
-                                    <span class="text-zinc-400 mr-2">$</span>
-                                    <input type="text" id="qemu-console-input" class="flex-1 bg-transparent border-none outline-none text-green-400" placeholder="Enter command...">
+                            <div id="qemu-iframe-container" class="w-full h-full">
+                                <iframe id="qemu-iframe" class="w-full h-full border-0" allow="cross-origin-isolated"></iframe>
+                            </div>
+                            <div id="qemu-terminal" class="absolute top-2 right-2 w-96 h-48 bg-zinc-900 rounded-lg shadow-lg hidden z-10">
+                                <div class="flex items-center justify-between bg-zinc-800 px-3 py-1 rounded-t-lg">
+                                    <span class="text-xs text-zinc-300">Terminal</span>
+                                    <button onclick="toggleTerminal()" class="text-zinc-400 hover:text-white">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
                                 </div>
+                                <div id="terminal" class="h-40 p-2"></div>
                             </div>
                         </div>
                         <div class="flex space-x-2 mt-3">
-                            <button onclick="toggleConsole()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                                Toggle Console
+                            <button onclick="toggleTerminal()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Toggle Terminal
                             </button>
-                            <button onclick="resetVM()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
-                                Reset VM
+                            <button onclick="restartVM()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
+                                Restart VM
                             </button>
                             <button onclick="closeVM()" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 rounded-md transition-colors shadow-sm">
                                 Close VM
@@ -378,7 +391,8 @@
 
         // QEMU WebAssembly functions
         let qemuInstance = null;
-        let qemuWorker = null;
+        let term = null;
+        let fitAddon = null;
 
         async function launchQemuVM() {
             const profile = document.getElementById('qemu-profile').value;
@@ -393,8 +407,8 @@
             statusText.textContent = 'Loading QEMU WebAssembly...';
 
             try {
-                // Initialize QEMU WebAssembly
-                await initQemuWasm(profile, diskImage);
+                // Load QEMU WebAssembly from ktock/qemu-wasm demo
+                await loadQemuDemo(profile, diskImage);
                 
                 statusText.textContent = 'VM started successfully';
                 setTimeout(() => {
@@ -408,112 +422,139 @@
             }
         }
 
-        async function initQemuWasm(profile, diskImage) {
+        async function loadQemuDemo(profile, diskImage) {
             const qemuContainer = document.getElementById('qemu-container');
-            const canvas = document.getElementById('qemu-canvas');
+            const qemuIframe = document.getElementById('qemu-iframe');
             
-            // Create a simple Web Worker for QEMU
-            const workerCode = `
-                self.onmessage = function(e) {
-                    const { type, data } = e.data;
-                    
-                    if (type === 'init') {
-                        // Simulate QEMU initialization
-                        setTimeout(() => {
-                            self.postMessage({ type: 'ready' });
-                        }, 2000);
-                    } else if (type === 'start') {
-                        // Simulate VM start
-                        setTimeout(() => {
-                            self.postMessage({ type: 'running' });
-                        }, 1000);
-                    } else if (type === 'reset') {
-                        setTimeout(() => {
-                            self.postMessage({ type: 'reset-complete' });
-                        }, 500);
-                    }
-                };
-            `;
-
-            const blob = new Blob([workerCode], { type: 'application/javascript' });
-            qemuWorker = new Worker(URL.createObjectURL(blob));
-
-            qemuWorker.onmessage = function(e) {
-                const { type } = e.data;
-                
-                if (type === 'ready') {
-                    document.getElementById('session-status').classList.add('hidden');
-                    qemuContainer.classList.remove('hidden');
-                    initCanvasDisplay();
-                } else if (type === 'running') {
-                    console.log('VM is running');
-                } else if (type === 'reset-complete') {
-                    console.log('VM reset complete');
-                }
+            // Use ktock/qemu-wasm demo infrastructure
+            // Load the Alpine Linux x86_64 demo
+            const demoUrl = 'https://ktock.github.io/qemu-wasm-demo/alpine-x86_64.html';
+            
+            // Set up message handler for communication with QEMU
+            window.addEventListener('message', handleQemuMessage);
+            
+            // Load the demo in iframe
+            qemuIframe.src = demoUrl;
+            
+            // Initialize terminal
+            initTerminal();
+            
+            // Show container
+            document.getElementById('session-status').classList.add('hidden');
+            qemuContainer.classList.remove('hidden');
+            
+            // Wait for iframe to load
+            qemuIframe.onload = function() {
+                console.log('QEMU demo loaded');
+                statusText.textContent = 'QEMU environment ready';
             };
-
-            // Initialize worker
-            qemuWorker.postMessage({ type: 'init' });
-            
-            // Start VM
-            qemuWorker.postMessage({ type: 'start' });
         }
 
-        function initCanvasDisplay() {
-            const canvas = document.getElementById('qemu-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas size
-            canvas.width = 800;
-            canvas.height = 600;
-            
-            // Simulate VM display with a boot screen
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = '#00ff00';
-            ctx.font = '12px monospace';
-            ctx.fillText('QEMU WebAssembly VM', 10, 20);
-            ctx.fillText('====================', 10, 35);
-            ctx.fillText('Initializing virtual hardware...', 10, 60);
-            ctx.fillText('Loading kernel...', 10, 75);
-            ctx.fillText('Starting system...', 10, 90);
-            
-            // Simulate boot process
-            setTimeout(() => {
-                ctx.fillStyle = '#00ff00';
-                ctx.fillText('System ready.', 10, 120);
-                ctx.fillText('Press Ctrl+C to access console', 10, 140);
-            }, 1500);
-        }
-
-        function toggleConsole() {
-            const console = document.getElementById('qemu-console');
-            console.classList.toggle('hidden');
-        }
-
-        function resetVM() {
-            if (qemuWorker) {
-                qemuWorker.postMessage({ type: 'reset' });
-                // Reset display
-                initCanvasDisplay();
+        function handleQemuMessage(event) {
+            // Handle messages from QEMU iframe
+            if (event.data && event.data.type === 'qemu-output') {
+                if (term) {
+                    term.write(event.data.output);
+                }
             }
+        }
+
+        function initTerminal() {
+            const terminalElement = document.getElementById('terminal');
+            
+            // Initialize xterm.js
+            term = new Terminal({
+                cursorBlink: true,
+                fontSize: 12,
+                fontFamily: 'Courier New, monospace',
+                theme: {
+                    background: '#1a1a1a',
+                    foreground: '#00ff00',
+                    cursor: '#00ff00'
+                }
+            });
+            
+            // Load fit addon
+            fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            
+            // Open terminal
+            term.open(terminalElement);
+            fitAddon.fit();
+            
+            // Welcome message
+            term.writeln('QEMU WebAssembly Terminal');
+            term.writeln('========================');
+            term.writeln('VM is running in the iframe above.');
+            term.writeln('This terminal can be used for additional commands.');
+            term.writeln('');
+            
+            // Handle terminal input
+            term.onData(data => {
+                // For demo purposes, just echo the input
+                term.write(data);
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                fitAddon.fit();
+            });
+        }
+
+        function toggleTerminal() {
+            const terminal = document.getElementById('qemu-terminal');
+            terminal.classList.toggle('hidden');
+            
+            if (!terminal.classList.contains('hidden') && fitAddon) {
+                fitAddon.fit();
+            }
+        }
+
+        function restartVM() {
+            const qemuIframe = document.getElementById('qemu-iframe');
+            const statusText = document.getElementById('status-text');
+            const sessionStatus = document.getElementById('session-status');
+            
+            sessionStatus.classList.remove('hidden');
+            statusText.textContent = 'Restarting VM...';
+            
+            // Reload the iframe to restart VM
+            qemuIframe.src = qemuIframe.src;
+            
+            setTimeout(() => {
+                sessionStatus.classList.add('hidden');
+                if (term) {
+                    term.clear();
+                    term.writeln('QEMU WebAssembly Terminal');
+                    term.writeln('========================');
+                    term.writeln('VM restarted.');
+                    term.writeln('');
+                }
+            }, 2000);
         }
 
         function closeVM() {
-            if (qemuWorker) {
-                qemuWorker.terminate();
-                qemuWorker = null;
+            const qemuContainer = document.getElementById('qemu-container');
+            const qemuIframe = document.getElementById('qemu-iframe');
+            const sessionStatus = document.getElementById('session-status');
+            
+            // Remove message handler
+            window.removeEventListener('message', handleQemuMessage);
+            
+            // Clear iframe
+            qemuIframe.src = '';
+            
+            // Dispose terminal
+            if (term) {
+                term.dispose();
+                term = null;
+                fitAddon = null;
             }
             
-            document.getElementById('qemu-container').classList.add('hidden');
-            document.getElementById('session-status').classList.add('hidden');
+            // Hide container
+            qemuContainer.classList.add('hidden');
+            sessionStatus.classList.add('hidden');
             document.getElementById('launch-btn').disabled = false;
-            
-            // Clear canvas
-            const canvas = document.getElementById('qemu-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
     </script>
 </body>
